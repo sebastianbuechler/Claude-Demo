@@ -1,8 +1,8 @@
 // index.ts - Main server file
-
 import { serve, ServerWebSocket } from "bun";
 import { Database } from "bun:sqlite";
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 // Define types
 interface Document {
@@ -65,17 +65,55 @@ type WebSocketMessage =
   | HeartbeatMessage;
 
 // Initialize SQLite database
-const db = new Database("documents.sqlite");
-db.exec(`
-  CREATE TABLE IF NOT EXISTS documents (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    updated_at INTEGER NOT NULL
-  )
-`);
+// Database path (configurable via environment variable)
+const dbPath = process.env.DB_PATH || join(".", "data", "documents.sqlite");
 
-// Prepare statements
+// Ensure data directory exists
+async function initializeDatabase() {
+  try {
+    const dataDir = dirname(dbPath);
+    console.log(`Checking if directory exists: ${dataDir}`);
+
+    if (!existsSync(dataDir)) {
+      console.log(`Directory doesn't exist, creating it now...`);
+      mkdirSync(dataDir, { recursive: true });
+      console.log(`Created data directory: ${dataDir}`);
+    } else {
+      console.log(`Directory already exists: ${dataDir}`);
+    }
+
+    // Wait a moment to ensure filesystem operations complete (helpful on Windows)
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Initialize database connection
+    console.log(`Opening database at: ${dbPath}`);
+    const db = new Database(dbPath);
+    console.log(`Connected to SQLite database at: ${dbPath}`);
+
+    // Create tables if they don't exist
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS documents (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
+
+    return db;
+  } catch (error) {
+    console.error("Database initialization error:", error);
+    if (error instanceof Error) {
+      console.error(error.stack);
+    }
+    throw error; // Re-throw to stop application if we can't connect to DB
+  }
+}
+
+// Initialize database
+const db = await initializeDatabase();
+
+// Create prepared statements
 const getDocumentStmt = db.prepare("SELECT * FROM documents WHERE id = ?");
 const listDocumentsStmt = db.prepare(
   "SELECT id, title, updated_at FROM documents ORDER BY updated_at DESC"
