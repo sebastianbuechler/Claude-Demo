@@ -1,0 +1,30 @@
+{
+  "name": "bun-collab-markdown",
+  "version": "1.0.0",
+  "description": "Real-time collaborative markdown editor powered by Bun and TypeScript",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "bun --watch index.ts",
+    "build": "bun build index.ts --outdir ./dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "bun",
+    "markdown",
+    "collaboration",
+    "websocket",
+    "sqlite",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bun": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "latest"
+  }
+}
