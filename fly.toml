@@ -1,4 +1,4 @@
-app = "bun-markdown-editor"
+app = "claude-demo"
 primary_region = "fra"
 
 [build]
