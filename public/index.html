@@ -6,38 +6,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Collaborative Markdown Editor</title>
   <style>
+    :root {
+      --primary-color: #1890ff;
+      --primary-hover: #40a9ff;
+      --background-color: #fff;
+      --text-color: #333;
+      --light-gray: #f5f5f5;
+      --border-color: #ddd;
+      --sidebar-width: 250px;
+      --header-height: 60px;
+      --mobile-breakpoint: 768px;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       line-height: 1.6;
-      color: #333;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    header {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--background-color);
+      height: var(--header-height);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    header .tagline {
+      display: block;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--text-color);
+      cursor: pointer;
+      padding: 0;
     }
     
     .container {
       display: flex;
-      gap: 20px;
-      height: calc(100vh - 120px);
+      height: calc(100vh - var(--header-height));
+      position: relative;
     }
     
     .sidebar {
-      width: 250px;
-      border-right: 1px solid #eee;
-      padding-right: 15px;
+      width: var(--sidebar-width);
+      border-right: 1px solid var(--border-color);
+      padding: 15px;
       overflow-y: auto;
+      background-color: var(--background-color);
+      transition: transform 0.3s ease;
     }
     
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      overflow: hidden;
+      padding: 0 15px 15px;
+    }
+    
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      padding: 20px;
+    }
+    
+    .empty-state h3 {
+      margin-bottom: 20px;
+      color: #666;
+      font-weight: 500;
+    }
+    
+    .empty-state p {
+      max-width: 400px;
+      margin-bottom: 30px;
+      color: #888;
+    }
+    
+    .empty-state .create-btn {
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+    
+    .empty-state .empty-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+      color: #ddd;
     }
     
     .document-list {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
     
     .document-item {
@@ -51,12 +138,12 @@
     }
     
     .document-item:hover {
-      background-color: #f5f5f5;
+      background-color: var(--light-gray);
     }
     
     .document-item.active {
       background-color: #e6f7ff;
-      border-left: 2px solid #1890ff;
+      border-left: 2px solid var(--primary-color);
     }
     
     .document-item-title {
@@ -86,48 +173,63 @@
       background-color: #fff1f0;
     }
     
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      margin-bottom: 10px;
+    }
+    
+    .toolbar h2 {
+      margin: 0;
+      font-size: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
     .editor-container {
       display: flex;
-      gap: 20px;
       flex: 1;
       min-height: 0;
+      overflow: hidden;
+      gap: 15px;
     }
     
     .editor, .preview {
       flex: 1;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       padding: 15px;
       overflow-y: auto;
+      min-height: 200px;
     }
     
     .editor {
       font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       resize: none;
+      font-size: 14px;
+      line-height: 1.5;
     }
     
     .preview {
-      background-color: #fafafa;
-    }
-    
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
+      background-color: var(--light-gray);
     }
     
     button {
-      background-color: #1890ff;
+      background-color: var(--primary-color);
       color: white;
       border: none;
       padding: 8px 16px;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 14px;
       transition: background-color 0.3s;
     }
     
     button:hover {
-      background-color: #40a9ff;
+      background-color: var(--primary-hover);
     }
     
     button:disabled {
@@ -153,7 +255,8 @@
       background-color: white;
       padding: 20px;
       border-radius: 4px;
-      width: 400px;
+      width: 90%;
+      max-width: 400px;
     }
     
     .modal-header {
@@ -187,8 +290,9 @@
     input, textarea {
       width: 100%;
       padding: 8px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
+      font-size: 14px;
     }
     
     .cursor {
@@ -219,6 +323,7 @@
       padding: 5px 10px;
       border-radius: 4px;
       font-size: 12px;
+      z-index: 100;
     }
     
     .connected {
@@ -236,28 +341,104 @@
       color: white;
     }
     
-    .status-users {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    
-    .user-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: #ff4d4f;
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+      
+      header h1 {
+        font-size: 20px;
+      }
+      
+      .container {
+        position: relative;
+      }
+      
+      .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        z-index: 5;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      }
+      
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      
+      .main {
+        padding: 0 10px 10px;
+      }
+      
+      .editor-container {
+        flex-direction: column;
+      }
+      
+      .editor, .preview {
+        flex: none;
+        height: 50%;
+        width: 100%;
+      }
+      
+      .toolbar h2 {
+        font-size: 16px;
+      }
+      
+      .connection-status {
+        bottom: 5px;
+        right: 5px;
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+      
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 4;
+      }
+      
+      .sidebar-overlay.open {
+        display: block;
+      }
+      
+      .empty-state {
+        padding: 15px;
+      }
+      
+      .empty-state h3 {
+        font-size: 18px;
+      }
+      
+      .empty-state p {
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+      
+      .empty-state .empty-icon {
+        font-size: 50px;
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Collaborative Markdown Editor</h1>
-    <p>Real-time collaborative editing powered by Bun</p>
+    <div>
+      <h1>Markdown Editor <span class="tagline">Real-time collaboration</span></h1>
+    </div>
+    <button id="menu-toggle" class="menu-toggle">☰</button>
   </header>
   
   <div class="container">
-    <div class="sidebar">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <div id="sidebar" class="sidebar">
       <div class="toolbar">
         <h2>Documents</h2>
         <button id="new-document-btn">New</button>
@@ -268,14 +449,19 @@
     <div class="main">
       <div class="toolbar">
         <h2 id="document-title">Select a document</h2>
-        <div class="status-users">
-          <span id="connection-count"></span>
-        </div>
+        <div id="connection-count"></div>
       </div>
       
-      <div class="editor-container">
+      <div id="editor-container" class="editor-container">
         <textarea id="editor" class="editor" placeholder="Write your markdown here..." disabled></textarea>
         <div id="preview" class="preview"></div>
+      </div>
+      
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h3>No documents yet</h3>
+        <p>Create your first document to start collaborating in real-time</p>
+        <button id="create-first-doc" class="create-btn">Create New Document</button>
       </div>
     </div>
   </div>
@@ -321,6 +507,7 @@
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     const reconnectDelay = 1000;
+    let isSidebarOpen = false;
     
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -335,438 +522,500 @@
       const closeModalBtn = document.querySelector('.close-button');
       const connectionStatus = document.getElementById('connection-status');
       const connectionCount = document.getElementById('connection-count');
-    
-    // Set up markdown rendering
-    marked.setOptions({
-      breaks: true,
-      gfm: true
-    });
-    
-    // Initialize WebSocket connection
-    function connectWebSocket() {
-      updateConnectionStatus('reconnecting');
+      const sidebar = document.getElementById('sidebar');
+      const menuToggle = document.getElementById('menu-toggle');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      const emptyState = document.getElementById('empty-state');
+      const createFirstDocBtn = document.getElementById('create-first-doc');
+      const editorContainer = document.getElementById('editor-container');
       
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
-      
-      socket.onopen = () => {
-        console.log('WebSocket connected');
-        updateConnectionStatus('connected');
-        reconnectAttempts = 0;
-        
-        // Join the current document if any
-        if (currentDocument) {
-          joinDocument(currentDocument.id);
-        }
-      };
-      
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        switch (data.type) {
-          case 'document':
-            editor.value = data.content;
-            renderMarkdown();
-            break;
-            
-          case 'update':
-            // Don't overwrite local changes
-            if (editor.value !== data.content) {
-              const selectionStart = editor.selectionStart;
-              const selectionEnd = editor.selectionEnd;
-              
-              editor.value = data.content;
-              
-              // Preserve cursor position if possible
-              editor.selectionStart = selectionStart;
-              editor.selectionEnd = selectionEnd;
-              
-              renderMarkdown();
-            }
-            break;
-            
-          case 'cursor':
-            updateRemoteCursor(data.position, data.clientId);
-            break;
-            
-          case 'document_list_update':
-            console.log("Received document list update notification");
-            fetchDocuments();
-            break;
-            
-          case 'document_deleted':
-            console.log("Document deleted notification:", data.documentId);
-            // If we were viewing the deleted document, clear the editor
-            if (currentDocument && currentDocument.id === data.documentId) {
-              currentDocument = null;
-              documentTitle.textContent = "Select a document";
-              editor.value = "";
-              editor.disabled = true;
-              preview.innerHTML = "";
-              alert("The document you were viewing has been deleted.");
-            }
-            fetchDocuments();
-            break;
-            
-          case 'heartbeat':
-            // Respond to heartbeat to keep connection alive
-            break;
-        }
-      };
-      
-      socket.onclose = () => {
-        console.log('WebSocket disconnected');
-        updateConnectionStatus('disconnected');
-        
-        // Try to reconnect
-        if (reconnectAttempts < maxReconnectAttempts) {
-          reconnectAttempts++;
-          setTimeout(connectWebSocket, reconnectDelay * reconnectAttempts);
-        }
-      };
-      
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-    }
-    
-    // Join a document
-    function joinDocument(documentId) {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({
-          type: 'join',
-          documentId
-        }));
-      }
-    }
-    
-    // Fetch documents
-    async function fetchDocuments() {
-      try {
-        console.log("Fetching documents list");
-        const response = await fetch('/api/documents');
-        const documents = await response.json();
-        
-        console.log("Received documents:", documents);
-        
-        documentList.innerHTML = '';
-        
-        if (documents.length === 0) {
-          // Show a message when there are no documents
-          const emptyMsg = document.createElement('li');
-          emptyMsg.className = 'document-item';
-          emptyMsg.style.fontStyle = 'italic';
-          emptyMsg.style.color = '#999';
-          emptyMsg.textContent = 'No documents yet. Create one!';
-          documentList.appendChild(emptyMsg);
-        } else {
-          // Sort documents by updated date (newest first)
-          documents.sort((a, b) => b.updatedAt - a.updatedAt);
+      // Empty state handler
+      function updateEmptyState(hasDocuments, isDocumentSelected) {
+        if (!hasDocuments || !isDocumentSelected) {
+          editorContainer.style.display = 'none';
+          emptyState.style.display = 'flex';
           
-          documents.forEach(doc => {
-            const li = document.createElement('li');
-            li.className = 'document-item';
-            if (currentDocument && doc.id === currentDocument.id) {
-              li.classList.add('active');
-            }
-            
-            // Create document title span
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'document-item-title';
-            titleSpan.textContent = doc.title;
-            titleSpan.addEventListener('click', () => loadDocument(doc.id));
-            li.appendChild(titleSpan);
-            
-            // Create delete button
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '×';
-            deleteBtn.title = 'Delete document';
-            deleteBtn.addEventListener('click', (e) => {
-              e.stopPropagation(); // Prevent document from being selected
-              if (confirm(`Are you sure you want to delete "${doc.title}"?`)) {
-                deleteDocument(doc.id);
-              }
-            });
-            li.appendChild(deleteBtn);
-            
-            li.dataset.id = doc.id;
-            documentList.appendChild(li);
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-        
-        // Show error in the document list
-        documentList.innerHTML = '';
-        const errorItem = document.createElement('li');
-        errorItem.className = 'document-item';
-        errorItem.style.color = 'red';
-        errorItem.textContent = 'Error loading documents';
-        documentList.appendChild(errorItem);
-      }
-    }
-    
-    // Load a document
-    async function loadDocument(documentId) {
-      try {
-        const response = await fetch(`/api/documents/${documentId}`);
-        const document = await response.json();
-        
-        currentDocument = document;
-        documentTitle.textContent = document.title;
-        editor.value = document.content;
-        editor.disabled = false;
-        renderMarkdown();
-        
-        // Update active document in the list
-        const items = documentList.querySelectorAll('.document-item');
-        items.forEach(item => {
-          item.classList.remove('active');
-          if (item.dataset.id === documentId) {
-            item.classList.add('active');
+          // Update empty state message based on whether there are any documents
+          const emptyStateTitle = emptyState.querySelector('h3');
+          const emptyStateText = emptyState.querySelector('p');
+          
+          if (!hasDocuments) {
+            emptyStateTitle.textContent = 'No documents yet';
+            emptyStateText.textContent = 'Create your first document to start collaborating in real-time';
+          } else {
+            emptyStateTitle.textContent = 'No document selected';
+            emptyStateText.textContent = 'Select a document from the sidebar or create a new one';
           }
+        } else {
+          editorContainer.style.display = 'flex';
+          emptyState.style.display = 'none';
+        }
+      }
+      
+      // Create first document button
+      if (createFirstDocBtn) {
+        createFirstDocBtn.addEventListener('click', () => {
+          newDocumentModal.style.display = 'flex';
+          document.getElementById('document-title-input').value = '';
+          document.getElementById('document-content-input').value = '# New Document';
         });
-        
-        // Join the document WebSocket room
-        joinDocument(documentId);
-      } catch (error) {
-        console.error('Error loading document:', error);
-      }
-    }
-    
-    // Create a new document
-    async function createDocument(title, content) {
-      try {
-        const response = await fetch('/api/documents', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ title, content })
-        });
-        
-        const document = await response.json();
-        
-        // Refresh the document list
-        fetchDocuments();
-        
-        // Load the new document
-        loadDocument(document.id);
-        
-        return document;
-      } catch (error) {
-        console.error('Error creating document:', error);
-        return null;
-      }
-    }
-    
-    // Update document content
-    function updateDocumentContent(content) {
-      if (!currentDocument || !socket || socket.readyState !== WebSocket.OPEN) return;
-      
-      socket.send(JSON.stringify({
-        type: 'update',
-        content,
-        cursor: {
-          start: editor.selectionStart,
-          end: editor.selectionEnd
-        }
-      }));
-    }
-    
-    // Update cursor position
-    function updateCursorPosition() {
-      if (!currentDocument || !socket || socket.readyState !== WebSocket.OPEN) return;
-      
-      const now = Date.now();
-      if (now - lastCursorUpdate < 100) return; // Throttle updates
-      
-      lastCursorUpdate = now;
-      
-      socket.send(JSON.stringify({
-        type: 'cursor',
-        position: {
-          start: editor.selectionStart,
-          end: editor.selectionEnd
-        }
-      }));
-    }
-    
-    // Update remote cursor
-    function updateRemoteCursor(position, remoteClientId) {
-      if (remoteClientId === clientId) return;
-      
-      // Remove old cursor if it exists
-      const oldCursor = document.querySelector(`[data-client-id="${remoteClientId}"]`);
-      if (oldCursor) {
-        oldCursor.remove();
       }
       
-      // Create a new cursor
-      const cursor = document.createElement('div');
-      cursor.className = 'cursor';
-      cursor.dataset.clientId = remoteClientId;
-      
-      // Calculate cursor position
-      const textarea = editor;
-      const text = textarea.value.substring(0, position.start);
-      const lines = text.split('\n');
-      
-      // Create a mirror element to calculate position
-      const mirror = document.createElement('div');
-      mirror.style.position = 'absolute';
-      mirror.style.top = '0';
-      mirror.style.left = '0';
-      mirror.style.visibility = 'hidden';
-      mirror.style.whiteSpace = 'pre-wrap';
-      mirror.style.paddingLeft = window.getComputedStyle(textarea).paddingLeft;
-      mirror.style.paddingTop = window.getComputedStyle(textarea).paddingTop;
-      mirror.style.width = window.getComputedStyle(textarea).width;
-      mirror.style.font = window.getComputedStyle(textarea).font;
-      mirror.style.lineHeight = window.getComputedStyle(textarea).lineHeight;
-      
-      // Add each line with a span to measure
-      lines.forEach((line, i) => {
-        const span = document.createElement('span');
-        span.textContent = line;
-        if (i < lines.length - 1) {
-          span.appendChild(document.createElement('br'));
-        }
-        mirror.appendChild(span);
+      // Mobile sidebar toggle
+      menuToggle.addEventListener('click', () => {
+        isSidebarOpen = !isSidebarOpen;
+        sidebar.classList.toggle('open', isSidebarOpen);
+        sidebarOverlay.classList.toggle('open', isSidebarOpen);
       });
       
-      // Add content for the last line up to the cursor
-      const lastLine = document.createElement('span');
-      lastLine.textContent = lines[lines.length - 1];
-      mirror.appendChild(lastLine);
+      sidebarOverlay.addEventListener('click', () => {
+        isSidebarOpen = false;
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      });
       
-      document.body.appendChild(mirror);
+      // Set up markdown rendering
+      marked.setOptions({
+        breaks: true,
+        gfm: true
+      });
       
-      // Calculate position
-      const textareaRect = textarea.getBoundingClientRect();
-      const mirrorRect = mirror.getBoundingClientRect();
-      const lastLineRect = lastLine.getBoundingClientRect();
-      
-      const cursorLeft = textareaRect.left + (lastLineRect.width % textareaRect.width);
-      const cursorTop = textareaRect.top + (lastLineRect.top - mirrorRect.top) +
-                        parseInt(window.getComputedStyle(textarea).paddingTop);
-      
-      // Remove the mirror
-      document.body.removeChild(mirror);
-      
-      // Position the cursor
-      cursor.style.left = `${cursorLeft}px`;
-      cursor.style.top = `${cursorTop}px`;
-      
-      // Add to document
-      document.body.appendChild(cursor);
-      
-      // Remove cursor after 5 seconds
-      setTimeout(() => {
-        if (cursor.parentNode) {
-          cursor.parentNode.removeChild(cursor);
-        }
-      }, 5000);
-    }
-    
-    // Render markdown
-    function renderMarkdown() {
-      preview.innerHTML = marked.parse(editor.value);
-    }
-    
-    // Update connection status
-    function updateConnectionStatus(status) {
-      connectionStatus.className = `connection-status ${status}`;
-      
-      switch (status) {
-        case 'connected':
-          connectionStatus.textContent = 'Connected';
-          break;
-        case 'disconnected':
-          connectionStatus.textContent = 'Disconnected';
-          break;
-        case 'reconnecting':
-          connectionStatus.textContent = 'Reconnecting...';
-          break;
+      // Initialize WebSocket connection
+      function connectWebSocket() {
+        updateConnectionStatus('reconnecting');
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        
+        socket.onopen = () => {
+          console.log('WebSocket connected');
+          updateConnectionStatus('connected');
+          reconnectAttempts = 0;
+          
+          // Join the current document if any
+          if (currentDocument) {
+            joinDocument(currentDocument.id);
+          }
+        };
+        
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'document':
+              editor.value = data.content;
+              renderMarkdown();
+              break;
+              
+            case 'update':
+              // Don't overwrite local changes
+              if (editor.value !== data.content) {
+                const selectionStart = editor.selectionStart;
+                const selectionEnd = editor.selectionEnd;
+                
+                editor.value = data.content;
+                
+                // Preserve cursor position if possible
+                editor.selectionStart = selectionStart;
+                editor.selectionEnd = selectionEnd;
+                
+                renderMarkdown();
+              }
+              break;
+              
+            case 'cursor':
+              updateRemoteCursor(data.position, data.clientId);
+              break;
+              
+            case 'document_list_update':
+              console.log("Received document list update notification");
+              fetchDocuments();
+              break;
+              
+            case 'document_deleted':
+              console.log("Document deleted notification:", data.documentId);
+              // If we were viewing the deleted document, clear the editor
+              if (currentDocument && currentDocument.id === data.documentId) {
+                currentDocument = null;
+                documentTitle.textContent = "Select a document";
+                editor.value = "";
+                editor.disabled = true;
+                preview.innerHTML = "";
+                alert("The document you were viewing has been deleted.");
+              }
+              fetchDocuments();
+              break;
+              
+            case 'heartbeat':
+              // Respond to heartbeat to keep connection alive
+              break;
+          }
+        };
+        
+        socket.onclose = () => {
+          console.log('WebSocket disconnected');
+          updateConnectionStatus('disconnected');
+          
+          // Try to reconnect
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            setTimeout(connectWebSocket, reconnectDelay * reconnectAttempts);
+          }
+        };
+        
+        socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
       }
-    }
-    
-    // Delete a document
-    async function deleteDocument(documentId) {
-      try {
-        console.log("Deleting document:", documentId);
+      
+      // Join a document
+      function joinDocument(documentId) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            type: 'join',
+            documentId
+          }));
+        }
+      }
+      
+      // Fetch documents
+      async function fetchDocuments() {
+        try {
+          console.log("Fetching documents list");
+          const response = await fetch('/api/documents');
+          const documents = await response.json();
+          
+          console.log("Received documents:", documents);
+          const hasDocuments = documents.length > 0;
+          
+          documentList.innerHTML = '';
+          
+          if (!hasDocuments) {
+            // Show a message when there are no documents
+            const emptyMsg = document.createElement('li');
+            emptyMsg.className = 'document-item';
+            emptyMsg.style.fontStyle = 'italic';
+            emptyMsg.style.color = '#999';
+            emptyMsg.textContent = 'No documents yet';
+            documentList.appendChild(emptyMsg);
+            
+            // Update the empty state in the main area
+            updateEmptyState(false, false);
+          } else {
+            // Sort documents by updated date (newest first)
+            documents.sort((a, b) => b.updatedAt - a.updatedAt);
+            
+            documents.forEach(doc => {
+              const li = document.createElement('li');
+              li.className = 'document-item';
+              if (currentDocument && doc.id === currentDocument.id) {
+                li.classList.add('active');
+              }
+              
+              // Create document title span
+              const titleSpan = document.createElement('span');
+              titleSpan.className = 'document-item-title';
+              titleSpan.textContent = doc.title;
+              titleSpan.addEventListener('click', () => {
+                loadDocument(doc.id);
+                
+                // Close sidebar on mobile after selecting a document
+                if (window.innerWidth <= 768) {
+                  isSidebarOpen = false;
+                  sidebar.classList.remove('open');
+                  sidebarOverlay.classList.remove('open');
+                }
+              });
+              li.appendChild(titleSpan);
+              
+              // Create delete button
+              const deleteBtn = document.createElement('button');
+              deleteBtn.className = 'delete-btn';
+              deleteBtn.textContent = '×';
+              deleteBtn.title = 'Delete document';
+              deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent document from being selected
+                if (confirm(`Are you sure you want to delete "${doc.title}"?`)) {
+                  deleteDocument(doc.id);
+                }
+              });
+              li.appendChild(deleteBtn);
+              
+              li.dataset.id = doc.id;
+              documentList.appendChild(li);
+            });
+            
+            // Update empty state based on whether a document is selected
+            updateEmptyState(true, !!currentDocument);
+          }
+        } catch (error) {
+          console.error('Error fetching documents:', error);
+          
+          // Show error in the document list
+          documentList.innerHTML = '';
+          const errorItem = document.createElement('li');
+          errorItem.className = 'document-item';
+          errorItem.style.color = 'red';
+          errorItem.textContent = 'Error loading documents';
+          documentList.appendChild(errorItem);
+          
+          // Show empty state with error
+          updateEmptyState(false, false);
+        }
+      }
+      
+      // Load a document
+      async function loadDocument(documentId) {
+        try {
+          const response = await fetch(`/api/documents/${documentId}`);
+          const document = await response.json();
+          
+          currentDocument = document;
+          documentTitle.textContent = document.title;
+          editor.value = document.content;
+          editor.disabled = false;
+          renderMarkdown();
+          
+          // Update active document in the list
+          const items = documentList.querySelectorAll('.document-item');
+          items.forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.id === documentId) {
+              item.classList.add('active');
+            }
+          });
+          
+          // Hide empty state, show editor
+          updateEmptyState(true, true);
+          
+          // Join the document WebSocket room
+          joinDocument(documentId);
+        } catch (error) {
+          console.error('Error loading document:', error);
+        }
+      }
+      
+      // Update connection status
+      function updateConnectionStatus(status) {
+        connectionStatus.className = `connection-status ${status}`;
         
-        const response = await fetch(`/api/documents/${documentId}`, {
-          method: 'DELETE'
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Failed to delete document:", errorData);
-          alert(`Failed to delete document: ${errorData.error || response.statusText}`);
+        switch (status) {
+          case 'connected':
+            connectionStatus.textContent = 'Connected';
+            break;
+          case 'disconnected':
+            connectionStatus.textContent = 'Disconnected';
+            break;
+          case 'reconnecting':
+            connectionStatus.textContent = 'Reconnecting...';
+            break;
+        }
+      }
+      
+      // Delete a document
+      async function deleteDocument(documentId) {
+        try {
+          console.log("Deleting document:", documentId);
+          
+          const response = await fetch(`/api/documents/${documentId}`, {
+            method: 'DELETE'
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Failed to delete document:", errorData);
+            alert(`Failed to delete document: ${errorData.error || response.statusText}`);
+            return false;
+          }
+          
+          console.log("Document deleted successfully");
+          
+          // If we were viewing the deleted document, clear the editor
+          if (currentDocument && currentDocument.id === documentId) {
+            currentDocument = null;
+            documentTitle.textContent = "Select a document";
+            editor.value = "";
+            editor.disabled = true;
+            preview.innerHTML = "";
+          }
+          
+          // Refresh the document list
+          await fetchDocuments();
+          
+          // After deletion, check if we need to update the empty state
+          const response2 = await fetch('/api/documents');
+          const documents = await response2.json();
+          if (documents.length === 0) {
+            updateEmptyState(false, false);
+          } else if (!currentDocument) {
+            updateEmptyState(true, false);
+          }
+          
+          return true;
+        } catch (error) {
+          console.error("Error deleting document:", error);
+          alert("An error occurred while deleting the document. Please try again.");
           return false;
         }
+      }
+      
+      // Create a new document
+      async function createDocument(title, content) {
+        try {
+          console.log("Sending POST request to create document");
+          const response = await fetch('/api/documents', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, content })
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Server returned error:", errorData);
+            throw new Error(`Server error: ${errorData.error || response.statusText}`);
+          }
+          
+          const document = await response.json();
+          console.log("Document created successfully:", document);
+          
+          // Refresh the document list
+          await fetchDocuments();
+          
+          // Load the new document
+          await loadDocument(document.id);
+          
+          // Make sure empty state is hidden
+          updateEmptyState(true, true);
+          
+          // Close sidebar on mobile after creating a document
+          if (window.innerWidth <= 768) {
+            isSidebarOpen = false;
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+          }
+          
+          return document;
+        } catch (error) {
+          console.error('Error creating document:', error);
+          return null;
+        }
+      }
+      
+      // Update document content
+      function updateDocumentContent(content) {
+        if (!currentDocument || !socket || socket.readyState !== WebSocket.OPEN) return;
         
-        console.log("Document deleted successfully");
+        socket.send(JSON.stringify({
+          type: 'update',
+          content,
+          cursor: {
+            start: editor.selectionStart,
+            end: editor.selectionEnd
+          }
+        }));
+      }
+      
+      // Update cursor position
+      function updateCursorPosition() {
+        if (!currentDocument || !socket || socket.readyState !== WebSocket.OPEN) return;
         
-        // If we were viewing the deleted document, clear the editor
-        if (currentDocument && currentDocument.id === documentId) {
-          currentDocument = null;
-          documentTitle.textContent = "Select a document";
-          editor.value = "";
-          editor.disabled = true;
-          preview.innerHTML = "";
+        const now = Date.now();
+        if (now - lastCursorUpdate < 100) return; // Throttle updates
+        
+        lastCursorUpdate = now;
+        
+        socket.send(JSON.stringify({
+          type: 'cursor',
+          position: {
+            start: editor.selectionStart,
+            end: editor.selectionEnd
+          }
+        }));
+      }
+      
+      // Update remote cursor
+      function updateRemoteCursor(position, remoteClientId) {
+        if (remoteClientId === clientId) return;
+        
+        // Remove old cursor if it exists
+        const oldCursor = document.querySelector(`[data-client-id="${remoteClientId}"]`);
+        if (oldCursor) {
+          oldCursor.remove();
         }
         
-        // Refresh the document list
-        await fetchDocuments();
+        // Create a new cursor
+        const cursor = document.createElement('div');
+        cursor.className = 'cursor';
+        cursor.dataset.clientId = remoteClientId;
         
-        return true;
-      } catch (error) {
-        console.error("Error deleting document:", error);
-        alert("An error occurred while deleting the document. Please try again.");
-        return false;
-      }
-    }
-    
-    // Create a new document
-    async function createDocument(title, content) {
-      try {
-        console.log("Sending POST request to create document");
-        const response = await fetch('/api/documents', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ title, content })
+        // Calculate cursor position
+        const textarea = editor;
+        const text = textarea.value.substring(0, position.start);
+        const lines = text.split('\n');
+        
+        // Create a mirror element to calculate position
+        const mirror = document.createElement('div');
+        mirror.style.position = 'absolute';
+        mirror.style.top = '0';
+        mirror.style.left = '0';
+        mirror.style.visibility = 'hidden';
+        mirror.style.whiteSpace = 'pre-wrap';
+        mirror.style.paddingLeft = window.getComputedStyle(textarea).paddingLeft;
+        mirror.style.paddingTop = window.getComputedStyle(textarea).paddingTop;
+        mirror.style.width = window.getComputedStyle(textarea).width;
+        mirror.style.font = window.getComputedStyle(textarea).font;
+        mirror.style.lineHeight = window.getComputedStyle(textarea).lineHeight;
+        
+        // Add each line with a span to measure
+        lines.forEach((line, i) => {
+          const span = document.createElement('span');
+          span.textContent = line;
+          if (i < lines.length - 1) {
+            span.appendChild(document.createElement('br'));
+          }
+          mirror.appendChild(span);
         });
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Server returned error:", errorData);
-          throw new Error(`Server error: ${errorData.error || response.statusText}`);
-        }
+        // Add content for the last line up to the cursor
+        const lastLine = document.createElement('span');
+        lastLine.textContent = lines[lines.length - 1];
+        mirror.appendChild(lastLine);
         
-        const document = await response.json();
-        console.log("Document created successfully:", document);
+        document.body.appendChild(mirror);
         
-        // Refresh the document list
-        await fetchDocuments();
+        // Calculate position
+        const textareaRect = textarea.getBoundingClientRect();
+        const mirrorRect = mirror.getBoundingClientRect();
+        const lastLineRect = lastLine.getBoundingClientRect();
         
-        // Load the new document
-        await loadDocument(document.id);
+        const cursorLeft = textareaRect.left + (lastLineRect.width % textareaRect.width);
+        const cursorTop = textareaRect.top + (lastLineRect.top - mirrorRect.top) +
+                          parseInt(window.getComputedStyle(textarea).paddingTop);
         
-        return document;
-      } catch (error) {
-        console.error('Error creating document:', error);
-        return null;
+        // Remove the mirror
+        document.body.removeChild(mirror);
+        
+        // Position the cursor
+        cursor.style.left = `${cursorLeft}px`;
+        cursor.style.top = `${cursorTop}px`;
+        
+        // Add to document
+        document.body.appendChild(cursor);
+        
+        // Remove cursor after 5 seconds
+        setTimeout(() => {
+          if (cursor.parentNode) {
+            cursor.parentNode.removeChild(cursor);
+          }
+        }, 5000);
       }
-    }
-    
-    // Initialize the application
-      fetchDocuments();
-      connectWebSocket();
+      
+      // Render markdown
+      function renderMarkdown() {
+        preview.innerHTML = marked.parse(editor.value);
+      }
       
       // Set up event listeners
       if (editor) {
@@ -834,6 +1083,20 @@
           newDocumentModal.style.display = 'none';
         }
       });
+      
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        // If window is resized larger than mobile breakpoint, reset sidebar state
+        if (window.innerWidth > 768) {
+          isSidebarOpen = false;
+          sidebar.classList.remove('open');
+          sidebarOverlay.classList.remove('open');
+        }
+      });
+      
+      // Initialize the application
+      fetchDocuments();
+      connectWebSocket();
     });
   </script>
 </body>
