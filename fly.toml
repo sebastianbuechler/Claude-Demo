@@ -1,0 +1,6 @@
+[env]
+  DB_PATH = "/app/data/documents.sqlite"
+
+[mounts]
+  source = "markdown_data"
+  destination = "/app/data"
